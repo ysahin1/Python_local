@@ -1,3 +1,4 @@
+# %%
 import os
 import numpy as np
 from Bio import SeqIO
@@ -6,13 +7,19 @@ import sys
 from pssm_lib import workEnv
 from pssm_lib.blast  import runPsiBlast
 
-class PSSM():
+# %%
+
+
+# %%
+class PSSM:
     print ("Starting")
-    def is_fasta(fastafile):
-        with open(fastafile, "r") as handle:
-            fasta = SeqIO.parse(handle, "fasta")
-        return any(fasta)
     def __init__(self, fastafile, dbfile):
+
+        def is_fasta(fastafile):
+            with open(fastafile, "r") as handle:
+                fasta = SeqIO.parse(handle, "fasta")
+                return any(fasta)
+
         if is_fasta:
             self.fastafile = fastafile
             self.aaOrder = "ARNDCQEGHILKMFPSTWYV"
@@ -21,24 +28,21 @@ class PSSM():
             self.pbnalign = 5000
             self.pbeval = 0.001
             self.threads = 1
-            print ("The variables have been assined to Class variables")
-        else:
-            print ("something is wrong")
+            print ("we construct envioremental variables")
     try:
-        with open(self.fastafile, "r") as handle:
-            for record in SeqIO.read(handle, 'fasta'):
-                workEnv = TemporaryEnv()
-                prefix = record.id.replace("|","_")
-                seq = record.seq
-                fastaSeq  = workEnv.createFile(prefix+".", ".fasta")
-                SeqIO.write([record], fastaSeq, 'fasta')
-                pssmFile = runPsiBlast(prefix,
-                                        self.dbfile, 
-                                        fastaSeq, 
-                                        workEnv, 
-                                        data_cache=data_cache,
-                                        num_alignments=ns.pbnalign, num_iterations=ns.pbniter, evalue=ns.pbeval,
-                                        threads=ns.threads)
+        for record in SeqIO.parse(fastafile, 'fasta'):
+            workEnv = TemporaryEnv()
+            prefix = record.id.replace("|","_")
+            seq = record.seq
+            fastaSeq  = workEnv.createFile(prefix+".", ".fasta")
+            SeqIO.write([record], fastaSeq, 'fasta')
+            pssmFile = runPsiBlast(prefix,
+                                    self.dbfile, 
+                                    fastaSeq, 
+                                    workEnv, 
+                                    data_cache=data_cache,
+                                    num_alignments=ns.pbnalign, num_iterations=ns.pbniter, evalue=ns.pbeval,
+                                    threads=ns.threads)
     except: 
         raise    
     
@@ -104,7 +108,36 @@ class PSSM():
                 raise
         return pssm
 
+
+
+# %%
 fastafile = "/media/yunus/TOSHIBA1TB/Python_local/datasets/example_dataset.fasta"
 dbfile = "/home/yunus/uniport_database/uniprot_sprot.pep" 
 pssm = PSSM(fastafile,dbfile)
 print (pssm)
+
+# %%
+    def encode(self,properties,blastpssm):
+        try:
+            pssm = BlastCheckPointPSSM(blastpssm)
+        
+
+# %%
+fastafile = "/media/yunus/TOSHIBA1TB/Python_local/example_dataset.fasta" 
+pssm = PSSM(fastafile)
+pssm.seq_to_pssm()
+
+# %%
+
+
+# %%
+def get_data_cache(cache_dir):
+    import os
+    from . import datacache
+    ret = None
+    if cache_dir is not None:
+        if os.path.isdir(cache_dir):
+            ret = datacache.DataCache(cache_dir)
+    return ret
+
+
