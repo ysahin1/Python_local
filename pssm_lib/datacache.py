@@ -36,11 +36,13 @@ class DataCache():
             s = i * self.dir_name_chars
             e = s + self.dir_name_chars
             path = os.path.join(path, digest[s:e])
+            print (path)
         return path
 
     def lookup(self, sequence, ext):
         digest = hashlib.sha512(sequence.encode("utf-8")).hexdigest()
-        name = os.path.join(self._get_path(digest), '%s.%s' % (digest, ext))
+        print (digest)
+        name =  (self._get_path(digest), '%s.%s' % (digest, ext))
         try:
             f=open(name)
         except:

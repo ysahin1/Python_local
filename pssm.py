@@ -1,110 +1,70 @@
 import os
+import logging
 import numpy as np
 from Bio import SeqIO
 from pssm_lib import config as cfg
 import sys
 from pssm_lib import workEnv
+from pssm_lib.workEnv import TemporaryEnv
 from pssm_lib.blast  import runPsiBlast
+from pssm_lib.datacache import DataCache
+
+fastafile = "ex.fasta"
+dbfile = "db/uniport"
 
 class PSSM():
-    print ("Starting")
-    def is_fasta(fastafile):
-        with open(fastafile, "r") as handle:
-            fasta = SeqIO.parse(handle, "fasta")
-        return any(fasta)
-    def __init__(self, fastafile, dbfile):
-        if is_fasta:
-            self.fastafile = fastafile
+
+    def __init__(self,fastafile,dbfile):
+        try:
             self.aaOrder = "ARNDCQEGHILKMFPSTWYV"
             self.dbfile = dbfile
             self.pbniter = 3
             self.pbnalign = 5000
             self.pbeval = 0.001
             self.threads = 1
-            print ("The variables have been assined to Class variables")
-        else:
-            print ("something is wrong")
-    try:
-        with open(self.fastafile, "r") as handle:
-            for record in SeqIO.read(handle, 'fasta'):
-                workEnv = TemporaryEnv()
-                prefix = record.id.replace("|","_")
-                seq = record.seq
-                fastaSeq  = workEnv.createFile(prefix+".", ".fasta")
-                SeqIO.write([record], fastaSeq, 'fasta')
-                pssmFile = runPsiBlast(prefix,
-                                        self.dbfile, 
-                                        fastaSeq, 
-                                        workEnv, 
-                                        data_cache=data_cache,
-                                        num_alignments=ns.pbnalign, num_iterations=ns.pbniter, evalue=ns.pbeval,
-                                        threads=ns.threads)
-    except: 
-        raise    
-    
-    def _check(self,line): # it checks if the file is PSSM file
-        import re
-        if not re.search('Last position-specific scoring matrix computed', line):
-            raise InvalidCheckpointFileError
-
-    def logistic(x):
-        # return math.tanh(x)
-        return 1 / (1 + numpy.exp(-x))
-
-    class InvalidCheckpointFileError(Exception):
-        def __init__(self):
-            pass
-
-    def seq_to_pssm(self):
-        X = []
-        for seq in self.seq_dic:
-            for aa in self.seq_dic[seq]:
-                aa == aa.upper()
-                x = [0.0]*len(self.aaOrder)
-                try:
-                    x[self.aaOrder.index(aa)]=1.0
-                except:
-                    pass
-                X.append(x)
-        return np.array(X)
-
-    def _pssmParseNew(self,checkpoint, transform):
-        
-        headerSize = 3
-        footerSize = -6
-
-        try:
-            _check(checkpoint[1])
+            self.fastafile = fastafile
+            self.wim = os.getcwd()
+            print ("The instance variables have been assinged")
         except:
-            raise
+            raise print("The instance variables have not been generated")
 
-        pssm = []
-        for line in checkpoint[headerSize:footerSize]:
-            line = line.split()[2:22]
-            pos = numpy.zeros(20)
-            for j in range(20):
-                if transform:
-                    pos[j] = logistic(float(line[j]))  # 1.0 / (1.0 + math.exp(-1 * float(line[j + shift])))
-                else:
-                    pos[j] = float(line[j])
-            pssm.append(pos)
-        return numpy.array(pssm)
+    def IsFasta(fastafile):
+        with open(fastafile, "r") as handle:
+            fasta = SeqIO.parse(handle, "fasta")
+        return any(fasta)
 
-    def BlastCheckPointPSSM(self,checkpointFile,newFormat = True, transform = True):
-        try:
-            checkpointFile = open(checkpointFile).readlines()
-        except IOError:
-            print("Error while open/reading checkpoint file.")
-            raise
-        pssm = None
-        if newFormat:
-            try:
-                pssm = _pssmParseNew(checkpointFile, transform)
-            except:
-                raise
-        return pssm
+    def GetDataCache(self, cache_dir):
+        ret = None
+        if cache_dir is not None:
+            if os.path.isdir(cache_dir):
+                ret = DataCache(cache_dir)
+        return ret
 
-fastafile = "/media/yunus/TOSHIBA1TB/Python_local/datasets/example_dataset.fasta"
-dbfile = "/home/yunus/uniport_database/uniprot_sprot.pep" 
+    def runBlast(self):
+        data_cache = self.GetDataCache("/".join(self.wim+"deneme"))
+        try:        
+            with open(self.fastafile, "r") as handle:
+                for record in SeqIO.parse(handle, 'fasta'):
+                    print (self.wim)
+                    workEnv = TemporaryEnv()
+                    prefix = record.id
+                    fastaSeq  = workEnv.createFile(prefix+".",".fasta")
+                    print (fastaSeq)
+                    SeqIO.write([record], fastaSeq, 'fasta')
+                    pssmFile = runPsiBlast(prefix,
+                                            self.dbfile, 
+                                            fastaSeq, 
+                                            workEnv=workEnv, 
+                                            data_cache=data_cache,
+                                            num_alignments= self.pbnalign, 
+                                            num_iterations=self.pbniter, 
+                                            evalue=self.pbeval,
+                                            threads=self.threads)
+                    if os.path.isfile(fastaSeq):
+                        logging.info("PSSM file has been constructed")
+                        workEnv.destroy()
+            handle.close()        
+        except: 
+            logging.error("PSSM file has not been constructed")   
 pssm = PSSM(fastafile,dbfile)
-print (pssm)
+run = pssm.runBlast()
